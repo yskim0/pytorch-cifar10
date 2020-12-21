@@ -72,8 +72,8 @@ optional&required arguments
 
 ## Results
 
-|Network|epoch|lr|top1@prec (test)|ModelSize(MB)|
-|:---:|:---:|:---:|:---:|:---:|:---:|
+|Network|epoch|lr|top1@prec(test)|ModelSize(MB)|
+|:---:|:---:|:---:|:---:|:---:|
 |AlexNet|50|0.001|74.2578%|266MB|
 |VGG|-|-|-|-|-|-|
 |ResNet|-|-|-|-|-|-|
