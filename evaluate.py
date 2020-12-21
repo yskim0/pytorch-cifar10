@@ -32,7 +32,7 @@ def evaluate(model, loss_fn, dataloader):
         num_steps : (int) # of batches to train on, each of size args.batch_size
     """
 
-    # set model to training mode
+    # set model to test mode
     model.eval()
 
     model_dir = './results/' + model_name
