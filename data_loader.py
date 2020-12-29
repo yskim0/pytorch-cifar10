@@ -17,9 +17,8 @@ def train_data_loader(batch_size=256, workers=1, shuffle=True):
     """
 
     transform = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.RandomRotation(15),
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean = [0.4913997551666284, 0.48215855929893703, 0.4465309133731618],
                              std = [0.24703225141799082, 0.24348516474564, 0.26158783926049628])
