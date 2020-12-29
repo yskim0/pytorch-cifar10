@@ -6,12 +6,13 @@ import torch.nn as nn
 class ZFNet(nn.Module):
     def __init__(self, num_classes=10):
         super(ZFNet, self).__init__()
+
         self.features = nn.Sequential(
             # layer 1
             nn.Conv2d(3, 96, kernel_size=7, stride=2, padding=1),
             nn.ReLU(inplace=True),
             # Local contrast norm.이 있어야 하는데 파이토치에는 해당 클래스가 없는 듯? LocalResponseNorm 과는 다른 건가?
-            nn.MaxPool2d(kernel_size=3, stride=1, return_indices=True), # return_indices – if True, will return the max indices along with the outputs. Useful for torch.nn.MaxUnpool2d later
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1, return_indices=True), # return_indices – if True, will return the max indices along with the outputs. Useful for torch.nn.MaxUnpool2d later
 
             # layer 2
             nn.Conv2d(96, 256, kernel_size=5, stride=2),
@@ -45,12 +46,24 @@ class ZFNet(nn.Module):
             nn.Linear(4096, num_classes),
         )
 
+        self.feature_outputs = [0]*len(self.features)
+        self.switch_indices = dict()
+        self.sizes = dict()
+
     def forward(self, x):
-        x = self.features(x)
-        x = torch.flatten(x, 1)
+
+        for i, layer in enumerate(self.features):
+            if isinstance(layer, nn.MaxPool2d):
+                x, indices = layer(x)
+                self.feature_outputs[i] = x
+                self.switch_indices[i] = indices
+            else:
+                x = layer(x)
+                self.feature_outputs[i] = x
+
+        x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
-
 
 def alexnet(**kwargs):
     model = ZFNet(**kwargs)

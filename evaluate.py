@@ -14,7 +14,7 @@ import data_loader
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='./data/test',
                     help="Directory containing the dataset")
-parser.add_argument('--model', default='alexnet',
+parser.add_argument('--model', type=str, required=True,
                     help="The model you want to test")
 parser.add_argument('--weights', required=True,
                     help="The weights file you want to test")

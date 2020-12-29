@@ -14,13 +14,13 @@ import data_loader
 parser = argparse.ArgumentParser()
 parser.add_argument('--data_dir', default='./data/train',
                     help="Directory containing the dataset")
-parser.add_argument('--model', default='alexnet',
+parser.add_argument('--model', type=str, required=True,
                     help="The model you want to train")
-parser.add_argument('--lr', default=0.001,
+parser.add_argument('--lr', type=float, default=0.001,
                     help="Learning rate")
-parser.add_argument('--epoch', default=50,
+parser.add_argument('--epoch', type=int, default=50,
                     help="Total training epochs")
-parser.add_argument('--batch_size', default=256,
+parser.add_argument('--batch_size', type=int, default=256,
                     help="batch size")
 parser.add_argument('--gpu', action='store_true', default='False',
                     help="GPU available")
@@ -111,7 +111,7 @@ if __name__ == '__main__':
 
     # Define the model and optimizer
     model = utils.get_network(args)
-    optimizer = optim.Adam(model.parameters(), lr=lr)
+    optimizer = utils.get_optimizer(model_name, model, lr)
 
     # fetch loss function
     loss_fn = nn.CrossEntropyLoss()
