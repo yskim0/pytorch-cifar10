@@ -1,90 +1,64 @@
-import argparse
 import os
-import logging
 
-import numpy as np
 import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.autograd import Variable
-
-import utils
-import data_loader
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', default='./data/test',
-                    help="Directory containing the dataset")
-parser.add_argument('--model', type=str, required=True,
-                    help="The model you want to test")
-parser.add_argument('--weights', required=True,
-                    help="The weights file you want to test")
-parser.add_argument('--batch_size', default=256,
-                    help="batch size")
-parser.add_argument('--gpu', action='store_true', default='False',
-                    help="GPU available")
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
 
 
-def evaluate(model, loss_fn, dataloader):
-    """ Evaluate the model on `num_steps` batches
+def train_data_loader(batch_size=256, workers=1, shuffle=True):
+    """ return training, test dataloader
     Args:
-        model : (torch.nn.Module) model
-        dataloader : (DataLoader) a torch.utils.data.DataLoader object that fetches training data
-        num_steps : (int) # of batches to train on, each of size args.batch_size
+        batch_size : (int) dataloader batchsize
+        workers : (int) # of subprocesses
+        shuffle : (bool) data shuffle at every epoch
+    Returns:
+        train_data_loader : torch dataloader obj.
+        test_data_loader : torch dataloader obj.
     """
 
-    # set model to test mode
-    model.eval()
+    transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean = [0.4913997551666284, 0.48215855929893703, 0.4465309133731618],
+                             std = [0.24703225141799082, 0.24348516474564, 0.26158783926049628])
+    ])
 
-    model_dir = './results/' + model_name
+    train_dataset = datasets.CIFAR10(root='./data/train', train=True, download=True, transform=transform)
+    train_data_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=workers
+    )
 
-    total_loss = 0.0
-    total_correct = 0.0
+    return train_data_loader
 
-    for i, (test_batch, labels_batch) in enumerate(dataloader):
-        # move to GPU if available
-        if args.gpu:
-            test_batch, labels_batch = test_batch.cuda(), labels_batch.cuda()
+def test_data_loader(batch_size=256, workers=1, shuffle=True):
+    """ return training, test dataloader
+    Args:
+        batch_size : (int) dataloader batchsize
+        workers : (int) # of subprocesses
+        shuffle : (bool) data shuffle at every epoch
+    Returns:
+        train_data_loader : torch dataloader obj.
+        test_data_loader : torch dataloader obj.
+    """
 
-        # convert to torch Variable
-        test_batch, labels_batch = Variable(test_batch), Variable(labels_batch)
+    transform = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor(),
+        transforms.Normalize(mean = [0.4913997551666284, 0.48215855929893703, 0.4465309133731618],
+                             std = [0.24703225141799082, 0.24348516474564, 0.26158783926049628])
+    ])
 
-        # compute model output and loss
-        output_batch = model(test_batch)
-        loss = loss_fn(output_batch, labels_batch)
+    test_dataset = datasets.CIFAR10(root='./data/test', train=False, download=True, transform=transform)
+    test_data_loader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=workers
+    )
 
-        total_loss += loss.item()
-        acc = utils.accuracy(output_batch.data.cpu().numpy(), labels_batch.data.cpu().numpy())
-        total_correct += acc
-
-    print("Loss:{:.4f}\t Test Accuracy:{:.4f}".format(
-        total_loss/len(dataloader),
-        100 * total_correct / len(dataloader)
-    ))
-
-if __name__ == '__main__':
-
-    # Load the parameters from parser
-    args = parser.parse_args()
-
-    model_name = args.model
-    weights_path = args.weights
-    batch_size = args.batch_size
-
-    logging.info("Loading the test dataset...")
-
-    # fetch train dataloader
-    test_dataloader = data_loader.test_data_loader()
-
-    logging.info("- done.")
-
-    # Define the model and optimizer
-    model = utils.get_network(args)
-    checkpoint = torch.load(weights_path)
-    model.load_state_dict(checkpoint['state_dict'])
-
-    # fetch loss function
-    loss_fn = nn.CrossEntropyLoss()
-
-    # Train the model
-    logging.info("Starting Test ...")
-    evaluate(model, loss_fn, test_dataloader)
+    return test_data_loader
